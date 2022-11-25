@@ -28,3 +28,56 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
     console.log("server is on")
 })
+
+//collections
+
+const Users = client.db('Dream-car').collection("users");
+const Categories = client.db('Dream-car').collection("categories");
+
+app.put('/users', async (req, res) => {
+    try {
+        const { email } = req.query;
+        const user = req.body;
+        filter = { email: email }
+        updateUser = {
+            $set: user
+        }
+        const result = await Users.updateOne(filter, updateUser, { upsert: true })
+        res.send({
+            success: true,
+            message: "user added"
+        })
+    } catch (error) {
+        res.send({
+            success: false,
+            message: error.message
+        })
+    }
+})
+
+
+// app.post("/categories", async (req, res) => {
+//     try {
+//         const result = await Categories.insertMany(req.body)
+//         res.send(result)
+//     } catch (error) {
+
+//     }
+// })
+
+//categories get api 
+
+app.get("/categories", async (req, res) => {
+    try {
+        const result = await Categories.find({}).toArray();
+        res.send({
+            success: true,
+            data: result
+        })
+    } catch (error) {
+        res.send({
+            success: false,
+            message: error.message
+        })
+    }
+})
