@@ -60,7 +60,24 @@ const verifyAdmin = async (req, res, next) => {
         }
         next();
     } catch (error) {
+        res.send({
+            message: error.message
+        })
+    }
+}
 
+const verifySeller = async (req, res, next) => {
+    try {
+        const decodedEmail = req.decoded.email;
+        const user = await Users.findOne({ email: decodedEmail });
+        if (user.role !== "seller") {
+            return res.status(403).send({ message: "Forbidden access.(Not a seller)" })
+        }
+        next();
+    } catch (error) {
+        res.send({
+            message: error.message
+        })
     }
 }
 
@@ -97,7 +114,7 @@ app.put('/users', async (req, res) => {
 
 //categories get api 
 
-app.get("/categories", verifyJWT, verifyAdmin, async (req, res) => {
+app.get("/categories", verifyJWT, verifySeller, async (req, res) => {
     try {
         const result = await Categories.find({}).toArray();
         res.send({
