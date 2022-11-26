@@ -51,6 +51,19 @@ app.listen(port, () => {
 const Users = client.db('Dream-car').collection("users");
 const Categories = client.db('Dream-car').collection("categories");
 
+const verifyAdmin = async (req, res, next) => {
+    try {
+        const decodedEmail = req.decoded.email;
+        const user = await Users.findOne({ email: decodedEmail });
+        if (user.role !== "admin") {
+            return res.status(403).send({ message: "Forbidden access.(not admin)" })
+        }
+        next();
+    } catch (error) {
+
+    }
+}
+
 app.put('/users', async (req, res) => {
     try {
         const { email } = req.query;
@@ -84,7 +97,7 @@ app.put('/users', async (req, res) => {
 
 //categories get api 
 
-app.get("/categories", async (req, res) => {
+app.get("/categories", verifyJWT, verifyAdmin, async (req, res) => {
     try {
         const result = await Categories.find({}).toArray();
         res.send({
