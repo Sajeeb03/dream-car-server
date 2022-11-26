@@ -114,7 +114,7 @@ app.put('/users', async (req, res) => {
 
 //categories get api 
 
-app.get("/categories", verifyJWT, verifySeller, async (req, res) => {
+app.get("/categories", async (req, res) => {
     try {
         const result = await Categories.find({}).toArray();
         res.send({
@@ -139,6 +139,33 @@ app.get('/jwt', async (req, res) => {
             success: true,
             data: token
         })
+    } catch (error) {
+        res.send({
+            success: false,
+            message: error.message
+        })
+    }
+})
+
+//check admin route
+app.get("/users/admin/:email", async (req, res) => {
+    try {
+        const { email } = req.params;
+        const user = await Users.findOne({ email: email })
+        res.send({ isAdmin: user.role === "admin" })
+    } catch (error) {
+        res.send({
+            success: false,
+            message: error.message
+        })
+    }
+})
+//check seller route
+app.get("/users/seller/:email", async (req, res) => {
+    try {
+        const { email } = req.params;
+        const user = await Users.findOne({ email: email })
+        res.send({ isSeller: user.role === "seller" })
     } catch (error) {
         res.send({
             success: false,
