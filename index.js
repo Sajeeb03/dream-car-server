@@ -6,24 +6,18 @@ require("dotenv").config()
 
 const port = process.env.PORT || 5000;
 const app = express();
+
+//middle wares
 app.use(cors());
 app.use(express.json());
 
-const verifyJWT = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-        return res.status(401).send({ message: "Unauthorized Access" })
-    }
-    const token = authHeader.split(' ')[1];
-    jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
-        if (err) {
-            return res.status(403).send({ message: "Forbidden access." })
-        }
-        req.decoded = decoded;
-        next();
-    })
+const verifyToken = require('./Middlewares/verifyJWT')
+const verifyJWT = verifyToken(jwt);
 
-}
+
+const isAdmin = require('./Middlewares/verifyAdmin');
+const isSeller = require('./Middlewares/verifySeller')
+
 
 const uri = process.env.URI;
 const client = new MongoClient(uri);
@@ -38,138 +32,58 @@ const dbConnect = async () => {
 }
 
 dbConnect();
-// console.log(uri)
-app.get("/", (req, res) => {
-    res.send("server is running")
-})
-app.listen(port, () => {
-    console.log("server is on")
-})
+
 
 //collections
-
 const Users = client.db('Dream-car').collection("users");
 const Categories = client.db('Dream-car').collection("categories");
 
-const verifyAdmin = async (req, res, next) => {
-    try {
-        const decodedEmail = req.decoded.email;
-        const user = await Users.findOne({ email: decodedEmail });
-        if (user.role !== "admin") {
-            return res.status(403).send({ message: "Forbidden access.(not admin)" })
-        }
-        next();
-    } catch (error) {
-        res.send({
-            message: error.message
-        })
-    }
-}
-
-const verifySeller = async (req, res, next) => {
-    try {
-        const decodedEmail = req.decoded.email;
-        const user = await Users.findOne({ email: decodedEmail });
-        if (user.role !== "seller") {
-            return res.status(403).send({ message: "Forbidden access.(Not a seller)" })
-        }
-        next();
-    } catch (error) {
-        res.send({
-            message: error.message
-        })
-    }
-}
-
-app.put('/users', async (req, res) => {
-    try {
-        const { email } = req.query;
-        const user = req.body;
-        filter = { email: email }
-        updateUser = {
-            $set: user
-        }
-        const result = await Users.updateOne(filter, updateUser, { upsert: true })
-        res.send({
-            success: true,
-            message: "user added"
-        })
-    } catch (error) {
-        res.send({
-            success: false,
-            message: error.message
-        })
-    }
-})
+//checking middle ware
+const verifyAdmin = isAdmin(Users);
+const verifySeller = isSeller(Users);
 
 
-// app.post("/categories", async (req, res) => {
-//     try {
-//         const result = await Categories.insertMany(req.body)
-//         res.send(result)
-//     } catch (error) {
 
-//     }
-// })
 
-//categories get api 
+//api
+const categoryApi = require('./Api/categories')
+const checkAdmin = require('./Api/admin')
+const checkSeller = require('./Api/seller')
+const generateToken = require("./Api/jwtToken")
+const postUser = require("./Api/postUser")
 
-app.get("/categories", async (req, res) => {
-    try {
-        const result = await Categories.find({}).toArray();
-        res.send({
-            success: true,
-            data: result
-        })
-    } catch (error) {
-        res.send({
-            success: false,
-            message: error.message
-        })
-    }
-})
+
+
+
+
+
+
+
+
+
+
+//categories get api
+categoryApi(app, Categories, verifyJWT)
+
+//post user while login
+postUser(app, Users)
+
+//check admin
+checkAdmin(app, Users)
+
+
+//check seller route
+checkSeller(app, Users)
+
 
 //jwt token
-app.get('/jwt', async (req, res) => {
+generateToken(app, jwt);
 
-    try {
-        const email = req.query;
-        const token = jwt.sign(email, process.env.SECRET_KEY, { expiresIn: '10h' })
-        res.send({
-            success: true,
-            data: token
-        })
-    } catch (error) {
-        res.send({
-            success: false,
-            message: error.message
-        })
-    }
+app.get("/", (req, res) => {
+    res.send("server is running")
 })
 
-//check admin route
-app.get("/users/admin/:email", async (req, res) => {
-    try {
-        const { email } = req.params;
-        const user = await Users.findOne({ email: email })
-        res.send({ isAdmin: user.role === "admin" })
-    } catch (error) {
-        res.send({
-            success: false,
-            message: error.message
-        })
-    }
-})
-//check seller route
-app.get("/users/seller/:email", async (req, res) => {
-    try {
-        const { email } = req.params;
-        const user = await Users.findOne({ email: email })
-        res.send({ isSeller: user.role === "seller" })
-    } catch (error) {
-        res.send({
-            success: false,
-            message: error.message
-        })
-    }
+//listen api
+app.listen(port, () => {
+    console.log("server is on")
 })
