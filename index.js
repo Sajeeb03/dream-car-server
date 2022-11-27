@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 const jwt = require("jsonwebtoken")
 require("dotenv").config()
 
@@ -16,7 +16,8 @@ const verifyJWT = verifyToken(jwt);
 
 
 const isAdmin = require('./Middlewares/verifyAdmin');
-const isSeller = require('./Middlewares/verifySeller')
+const isSeller = require('./Middlewares/verifySeller');
+const isBuyer = require('./Middlewares/verifyBuyer');
 
 
 const uri = process.env.URI;
@@ -41,6 +42,7 @@ const Products = client.db('Dream-car').collection("products");
 //checking middle ware
 const verifyAdmin = isAdmin(Users);
 const verifySeller = isSeller(Users);
+const verifyBuyer = isBuyer(Users);
 
 
 
@@ -49,17 +51,25 @@ const verifySeller = isSeller(Users);
 const categoryApi = require('./Api/categories')
 const checkAdmin = require('./Api/admin')
 const checkSeller = require('./Api/seller')
+const checkBuyer = require("./Api/buyer")
 const generateToken = require("./Api/jwtToken")
 const postUser = require("./Api/postUser")
 const postProducts = require("./Api/postProducts")
 const getMyCars = require("./Api/getMyCars")
 const getCars = require("./Api/getCars")
-
+const getUsers = require("./Api/getUsers")
+const deleteUser = require("./Api/deleteUser")
 //categories get api
 categoryApi(app, Categories, verifyJWT)
 
 //post user while login
 postUser(app, Users)
+
+//getUsers
+getUsers(app, Users, verifyJWT, verifyAdmin);
+
+// delete user
+deleteUser(app, Users, verifyJWT, verifyAdmin, ObjectId)
 
 //check admin
 checkAdmin(app, Users)
@@ -67,6 +77,9 @@ checkAdmin(app, Users)
 
 //check seller route
 checkSeller(app, Users)
+
+//check buyer
+checkBuyer(app, Users)
 
 //post product i mean car
 
