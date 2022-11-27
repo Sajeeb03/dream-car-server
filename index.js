@@ -37,7 +37,7 @@ dbConnect();
 //collections
 const Users = client.db('Dream-car').collection("users");
 const Categories = client.db('Dream-car').collection("categories");
-
+const Products = client.db('Dream-car').collection("products");
 //checking middle ware
 const verifyAdmin = isAdmin(Users);
 const verifySeller = isSeller(Users);
@@ -51,14 +51,7 @@ const checkAdmin = require('./Api/admin')
 const checkSeller = require('./Api/seller')
 const generateToken = require("./Api/jwtToken")
 const postUser = require("./Api/postUser")
-
-
-
-
-
-
-
-
+const postProducts = require("./Api/postProducts")
 
 
 
@@ -74,6 +67,10 @@ checkAdmin(app, Users)
 
 //check seller route
 checkSeller(app, Users)
+
+//post product i mean car
+
+postProducts(app, Products, verifyJWT, verifySeller);
 
 
 //jwt token
