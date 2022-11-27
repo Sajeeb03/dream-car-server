@@ -59,6 +59,9 @@ const getMyCars = require("./Api/getMyCars")
 const getCars = require("./Api/getCars")
 const getUsers = require("./Api/getUsers")
 const deleteUser = require("./Api/deleteUser")
+const verification = require("./Api/putVerification");
+const { query } = require('express');
+const getSellerDetails = require('./Api/getSellerDetails');
 //categories get api
 categoryApi(app, Categories, verifyJWT)
 
@@ -78,6 +81,8 @@ checkAdmin(app, Users)
 //check seller route
 checkSeller(app, Users)
 
+//verify seller
+verification(app, Users, Products, verifyJWT, verifyAdmin, ObjectId)
 //check buyer
 checkBuyer(app, Users)
 
@@ -94,6 +99,10 @@ getCars(app, Products, verifyJWT);
 //jwt token
 generateToken(app, jwt);
 
+
+//getSellerDetails
+getSellerDetails(app, verifyJWT, verifySeller, Users)
+
 app.get("/", (req, res) => {
     res.send("server is running")
 })
@@ -102,3 +111,4 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
     console.log("server is on")
 })
+
