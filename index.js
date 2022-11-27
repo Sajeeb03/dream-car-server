@@ -52,8 +52,8 @@ const checkSeller = require('./Api/seller')
 const generateToken = require("./Api/jwtToken")
 const postUser = require("./Api/postUser")
 const postProducts = require("./Api/postProducts")
-
-
+const getMyCars = require("./Api/getMyCars")
+const getCars = require("./Api/getCars")
 
 //categories get api
 categoryApi(app, Categories, verifyJWT)
@@ -72,6 +72,11 @@ checkSeller(app, Users)
 
 postProducts(app, Products, verifyJWT, verifySeller);
 
+//getMyProducts
+getMyCars(app, Products, verifyJWT, verifySeller);
+
+//get car with category name
+getCars(app, Products, verifyJWT);
 
 //jwt token
 generateToken(app, jwt);
