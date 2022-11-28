@@ -39,6 +39,11 @@ dbConnect();
 const Users = client.db('Dream-car').collection("users");
 const Categories = client.db('Dream-car').collection("categories");
 const Products = client.db('Dream-car').collection("products");
+const Advertise = client.db('Dream-car').collection("advertised-Item");
+const Orders = client.db('Dream-car').collection("orders");
+const Reports = client.db('Dream-car').collection("reports");
+
+
 //checking middle ware
 const verifyAdmin = isAdmin(Users);
 const verifySeller = isSeller(Users);
@@ -60,8 +65,16 @@ const getCars = require("./Api/getCars")
 const getUsers = require("./Api/getUsers")
 const deleteUser = require("./Api/deleteUser")
 const verification = require("./Api/putVerification");
-const { query } = require('express');
 const getSellerDetails = require('./Api/getSellerDetails');
+const deleteProduct = require('./Api/deleteProduct');
+const postAdvertisement = require('./Api/postAdvertisement');
+const putProduct = require('./Api/putProduct');
+const getAdvertisement = require('./Api/getAdvertisement');
+const postOrder = require('./Api/postOrder');
+const getOrders = require('./Api/getOrders');
+const postReport = require('./Api/postReport');
+const getReports = require('./Api/getReports');
+const deleteReport = require('./Api/deleteReport');
 //categories get api
 categoryApi(app, Categories, verifyJWT)
 
@@ -90,6 +103,9 @@ checkBuyer(app, Users)
 
 postProducts(app, Products, verifyJWT, verifySeller);
 
+//delete product
+deleteProduct(app, Products, Advertise, verifyJWT, verifySeller, ObjectId)
+
 //getMyProducts
 getMyCars(app, Products, verifyJWT, verifySeller);
 
@@ -103,9 +119,34 @@ generateToken(app, jwt);
 //getSellerDetails
 getSellerDetails(app, verifyJWT, verifySeller, Users)
 
+//advertise item 
+postAdvertisement(app, Advertise, Products, verifyJWT, verifySeller, ObjectId)
+
+//get advertisement
+getAdvertisement(app, Advertise);
+
+//update product and remove advertisement
+putProduct(app, Products, Advertise, verifyJWT, verifySeller, ObjectId)
+
+
+//post order
+postOrder(app, Orders, verifyJWT, verifyBuyer);
+
+//getOrder
+getOrders(app, Orders, verifyJWT, verifyBuyer);
+
+
+//post report
+postReport(app, Reports, verifyJWT);
+
+//getReport
+getReports(app, Reports, verifyJWT, verifyAdmin)
 app.get("/", (req, res) => {
     res.send("server is running")
 })
+
+//deleteReports
+deleteReport(app, Reports, verifyJWT, verifyAdmin)
 
 //listen api
 app.listen(port, () => {
