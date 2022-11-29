@@ -1,6 +1,7 @@
+const { ObjectId } = require("mongodb");
 
 
-const postAdvertisement = (app, Advertise, Products, verifyJWT, verifySeller, ObjectId) => {
+const postAdvertisement = (app, Advertise, Products, verifyJWT, verifySeller) => {
     app.post("/advertise", verifyJWT, verifySeller, async (req, res) => {
         try {
             const product = req.body;
@@ -22,4 +23,23 @@ const postAdvertisement = (app, Advertise, Products, verifyJWT, verifySeller, Ob
     })
 }
 
-module.exports = postAdvertisement;
+//get all advertisements
+const getAdvertisement = (app, Advertise) => {
+    app.get('/advertise', async (req, res) => {
+        try {
+            const result = await Advertise.find({}).toArray();
+            res.send({
+                success: true,
+                data: result
+            })
+        } catch (error) {
+            res.send({
+                success: false,
+                message: error.message
+            })
+        }
+    })
+}
+
+
+module.exports = { postAdvertisement, getAdvertisement };

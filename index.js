@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
 require("dotenv").config()
+
+const stripe = require("stripe")(process.env.PAY_SECRET_KEY);
 
 const port = process.env.PORT || 5000;
 const app = express();
@@ -10,14 +12,9 @@ const app = express();
 //middle wares
 app.use(cors());
 app.use(express.json());
+const { verifyToken, isAdmin, isSeller, isBuyer } = require('./MiddleWares/middleWares');
 
-const verifyToken = require('./Middlewares/verifyJWT')
 const verifyJWT = verifyToken(jwt);
-
-
-const isAdmin = require('./Middlewares/verifyAdmin');
-const isSeller = require('./Middlewares/verifySeller');
-const isBuyer = require('./Middlewares/verifyBuyer');
 
 
 const uri = process.env.URI;
@@ -53,30 +50,18 @@ const verifyBuyer = isBuyer(Users);
 
 
 //api
-const categoryApi = require('./Api/categories')
-const checkAdmin = require('./Api/admin')
-const checkSeller = require('./Api/seller')
-const checkBuyer = require("./Api/buyer")
-const generateToken = require("./Api/jwtToken")
-const postUser = require("./Api/postUser")
-const postProducts = require("./Api/postProducts")
-const getMyCars = require("./Api/getMyCars")
-const getCars = require("./Api/getCars")
-const getUsers = require("./Api/getUsers")
-const deleteUser = require("./Api/deleteUser")
-const verification = require("./Api/putVerification");
-const getSellerDetails = require('./Api/getSellerDetails');
-const deleteProduct = require('./Api/deleteProduct');
-const postAdvertisement = require('./Api/postAdvertisement');
-const putProduct = require('./Api/putProduct');
-const getAdvertisement = require('./Api/getAdvertisement');
-const postOrder = require('./Api/postOrder');
-const getOrders = require('./Api/getOrders');
-const postReport = require('./Api/postReport');
-const getReports = require('./Api/getReports');
-const deleteReport = require('./Api/deleteReport');
+const { getClientSecret } = require('./Api/Payments/paymentsApi');
+const { getOrders, getOrder, postOrder } = require('./Api/Orders/Orders');
+const { postReport, getReports, deleteReport } = require('./Api/Reports/reports');
+const { postUser, getUsers, deleteUser, getSellerDetails } = require('./Api/Users/users');
+const { getProducts, getMyProducts, postProducts, deleteProduct, updateProduct, categories } = require('./Api/Products/products');
+const { checkAdmin, checkSeller, verification, checkBuyer, generateToken } = require('./Api/Verification/verification');
+const { postAdvertisement, getAdvertisement } = require('./Api/Advertisements/advertisements');
+
+
+
 //categories get api
-categoryApi(app, Categories, verifyJWT)
+categories(app, Categories, verifyJWT)
 
 //post user while login
 postUser(app, Users)
@@ -85,7 +70,7 @@ postUser(app, Users)
 getUsers(app, Users, verifyJWT, verifyAdmin);
 
 // delete user
-deleteUser(app, Users, verifyJWT, verifyAdmin, ObjectId)
+deleteUser(app, Users, verifyJWT, verifyAdmin)
 
 //check admin
 checkAdmin(app, Users)
@@ -95,7 +80,7 @@ checkAdmin(app, Users)
 checkSeller(app, Users)
 
 //verify seller
-verification(app, Users, Products, verifyJWT, verifyAdmin, ObjectId)
+verification(app, Users, Products, verifyJWT, verifyAdmin)
 //check buyer
 checkBuyer(app, Users)
 
@@ -104,13 +89,18 @@ checkBuyer(app, Users)
 postProducts(app, Products, verifyJWT, verifySeller);
 
 //delete product
-deleteProduct(app, Products, Advertise, verifyJWT, verifySeller, ObjectId)
+deleteProduct(app, Products, Advertise, verifyJWT, verifySeller)
 
 //getMyProducts
-getMyCars(app, Products, verifyJWT, verifySeller);
+getMyProducts(app, Products, verifyJWT, verifySeller);
 
 //get car with category name
-getCars(app, Products, verifyJWT);
+getProducts(app, Products, verifyJWT);
+
+
+//update product and remove advertisement
+updateProduct(app, Products, Advertise, verifyJWT, verifySeller)
+
 
 //jwt token
 generateToken(app, jwt);
@@ -120,13 +110,12 @@ generateToken(app, jwt);
 getSellerDetails(app, verifyJWT, verifySeller, Users)
 
 //advertise item 
-postAdvertisement(app, Advertise, Products, verifyJWT, verifySeller, ObjectId)
+postAdvertisement(app, Advertise, Products, verifyJWT, verifySeller)
 
 //get advertisement
 getAdvertisement(app, Advertise);
 
-//update product and remove advertisement
-putProduct(app, Products, Advertise, verifyJWT, verifySeller, ObjectId)
+
 
 
 //post order
@@ -136,20 +125,31 @@ postOrder(app, Orders, verifyJWT, verifyBuyer);
 getOrders(app, Orders, verifyJWT, verifyBuyer);
 
 
+//get orderby id 
+getOrder(app, Orders, verifyJWT, verifyBuyer);
+
 //post report
 postReport(app, Reports, verifyJWT);
 
 //getReport
 getReports(app, Reports, verifyJWT, verifyAdmin)
+
+//deleteReports
+deleteReport(app, Reports, Products, Advertise, verifyJWT, verifyAdmin)
+
+
+//get client secret 
+getClientSecret(app, verifyJWT, stripe);
+
 app.get("/", (req, res) => {
     res.send("server is running")
 })
 
-//deleteReports
-deleteReport(app, Reports, verifyJWT, verifyAdmin)
 
 //listen api
 app.listen(port, () => {
     console.log("server is on")
 })
+
+
 
