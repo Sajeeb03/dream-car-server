@@ -39,6 +39,7 @@ const Products = client.db('Dream-car').collection("products");
 const Advertise = client.db('Dream-car').collection("advertised-Item");
 const Orders = client.db('Dream-car').collection("orders");
 const Reports = client.db('Dream-car').collection("reports");
+const Payments = client.db('Dream-car').collection("payments");        
 
 
 //checking middle ware
@@ -50,7 +51,7 @@ const verifyBuyer = isBuyer(Users);
 
 
 //api
-const { getClientSecret } = require('./Api/Payments/paymentsApi');
+const { getClientSecret, savePayment } = require('./Api/Payments/paymentsApi');
 const { getOrders, getOrder, postOrder } = require('./Api/Orders/Orders');
 const { postReport, getReports, deleteReport } = require('./Api/Reports/reports');
 const { postUser, getUsers, deleteUser, getSellerDetails } = require('./Api/Users/users');
@@ -140,6 +141,9 @@ deleteReport(app, Reports, Products, Advertise, verifyJWT, verifyAdmin)
 
 //get client secret 
 getClientSecret(app, verifyJWT, stripe);
+
+//save payment details to db
+savePayment(app, Payments, Orders, verifyJWT)
 
 app.get("/", (req, res) => {
     res.send("server is running")
